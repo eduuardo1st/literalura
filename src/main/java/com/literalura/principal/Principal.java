@@ -37,6 +37,8 @@ public class Principal {
                     3 - Listar autores registrados
                     4 - Listar autores vivos em determinado ano
                     5 - Listar livros por idioma
+                    6 - Top 10 livros mais baixados da API
+                    7 - Buscar autor por nome
                     
                     0 - Sair
                     ---------------------------------------
@@ -61,6 +63,12 @@ public class Principal {
                     break;
                 case 5:
                     listarLivrosPorIdioma();
+                    break;
+                case 6:
+                    listarTop10LivrosApi();
+                    break;
+                case 7:
+                    buscarAutorPorNome();
                     break;
                 case 0:
                     System.out.println("Saindo do LiterAlura...");
@@ -187,5 +195,41 @@ public class Principal {
                 System.out.println("--------------------------");
             });
         }
+    }
+
+    private void buscarAutorPorNome() {
+        System.out.println("Digite o nome (ou parte do nome) do autor que deseja buscar:");
+        var nome = leitura.nextLine();
+
+        var autores = autorRepository.findByNomeContainingIgnoreCase(nome);
+
+        if (autores.isEmpty()) {
+            System.out.println("Nenhum autor encontrado com o termo: " + nome);
+        } else {
+            System.out.println("\n--- AUTORES ENCONTRADOS ---");
+            autores.forEach(a -> {
+                System.out.println("Nome: " + a.getNome());
+                System.out.println("Ano de Nascimento: " + (a.getAnoNascimento() != null ? a.getAnoNascimento() : "Desconhecido"));
+                System.out.println("Ano de Falecimento: " + (a.getAnoFalecimento() != null ? a.getAnoFalecimento() : "Desconhecido"));
+                System.out.println("---------------------------");
+            });
+        }
+    }
+
+    private void listarTop10LivrosApi() {
+        System.out.println("Buscando os 10 livros mais populares na API do Gutendex...");
+
+        var json = consumoApi.obterDados("https://gutendex.com/books/");
+        var dados = conversor.obterDados(json, DadosResultados.class);
+
+        System.out.println("\n--- TOP 10 LIVROS MAIS BAIXADOS (API) ---");
+        dados.resultados().stream()
+                .limit(10)
+                .forEach(l -> {
+                    System.out.println("Título: " + l.titulo());
+                    System.out.println("Autor: " + (l.autores().isEmpty() ? "Desconhecido" : l.autores().get(0).nome()));
+                    System.out.println("Downloads: " + l.numeroDownloads());
+                    System.out.println("-----------------------------------------");
+                });
     }
 }
